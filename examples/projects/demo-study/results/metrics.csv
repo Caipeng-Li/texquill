@@ -1,0 +1,4 @@
+model,accuracy,f1,params_m
+dev-baseline,82.4,79.1,110
+dev-texquill,84.8,82.2,118
+test-texquill,85.7,83.9,118

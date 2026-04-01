@@ -1,0 +1,4 @@
+model,accuracy,f1,params_m
+texquill-no-rules,84.6,82.1,118
+texquill-no-merge,84.9,82.8,118
+texquill-full,85.7,83.9,118

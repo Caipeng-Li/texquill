@@ -1,0 +1,4 @@
+model,accuracy,f1,params_m
+baseline,83.1,80.4,110
+texquill,85.7,83.9,118
+texquill-xl,86.2,84.5,124
