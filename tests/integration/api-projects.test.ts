@@ -27,7 +27,7 @@ it("lists projects beneath the shared root", async () => {
 
 it("lists CSV files for a project beneath the shared root", async () => {
   const response = await projectActionGet(buildRequest("/api/projects/demo-study/files"), {
-    params: { projectPath: ["demo-study", "files"] },
+    params: Promise.resolve({ projectPath: ["demo-study", "files"] }),
   });
   const body = await response.json();
 

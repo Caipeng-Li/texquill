@@ -43,6 +43,15 @@ beforeEach(() => {
       });
     }
 
+    if (url.endsWith("/api/projects/demo-study/workspace")) {
+      return new Response(JSON.stringify({ error: "No saved workspace yet." }), {
+        status: 404,
+        headers: {
+          "content-type": "application/json",
+        },
+      });
+    }
+
     if (url.includes("/api/projects/demo-study/preview?file=results%2Fmain.csv")) {
       return jsonResponse({
         columns: ["model", "accuracy", "f1", "params_m"],

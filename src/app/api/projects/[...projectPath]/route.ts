@@ -18,8 +18,14 @@ const bootstrapRequestSchema = z.object({
 });
 
 type RouteContext = {
-  params: Promise<{ projectPath: string[] }> | { projectPath: string[] };
+  params: Promise<{ projectPath: string[] }>;
 };
+
+function getErrorStatus(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT"
+    ? 404
+    : 400;
+}
 
 function splitProjectAction(projectPath: string[]) {
   const action = projectPath.at(-1);
@@ -37,7 +43,7 @@ function splitProjectAction(projectPath: string[]) {
 
 export async function GET(request: Request, context: RouteContext) {
   try {
-    const { projectPath } = await Promise.resolve(context.params);
+    const { projectPath } = await context.params;
     const { action, targetProjectPath } = splitProjectAction(projectPath);
 
     if (action === "files") {
@@ -75,13 +81,13 @@ export async function GET(request: Request, context: RouteContext) {
     const message =
       error instanceof Error ? error.message : "Unable to handle project request.";
 
-    return Response.json({ error: message }, { status: 400 });
+    return Response.json({ error: message }, { status: getErrorStatus(error) });
   }
 }
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const { projectPath } = await Promise.resolve(context.params);
+    const { projectPath } = await context.params;
     const { action, targetProjectPath } = splitProjectAction(projectPath);
 
     if (action === "bootstrap") {
@@ -128,6 +134,6 @@ export async function POST(request: Request, context: RouteContext) {
     const message =
       error instanceof Error ? error.message : "Unable to handle project mutation.";
 
-    return Response.json({ error: message }, { status: 400 });
+    return Response.json({ error: message }, { status: getErrorStatus(error) });
   }
 }

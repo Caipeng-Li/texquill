@@ -97,7 +97,7 @@ it("writes project-local TeXquill state under .texquill and loads it back", asyn
       body: JSON.stringify(workspacePayload),
     }),
     {
-      params: { projectPath: ["demo-study", "workspace"] },
+      params: Promise.resolve({ projectPath: ["demo-study", "workspace"] }),
     },
   );
 
@@ -114,7 +114,7 @@ it("writes project-local TeXquill state under .texquill and loads it back", asyn
   const loadResponse = await projectActionGet(
     buildRequest("/api/projects/demo-study/workspace?recipe=main-results"),
     {
-      params: { projectPath: ["demo-study", "workspace"] },
+      params: Promise.resolve({ projectPath: ["demo-study", "workspace"] }),
     },
   );
   const body = await loadResponse.json();
@@ -134,7 +134,7 @@ it("writes a deterministic LaTeX export and returns its project-local path", asy
       body: JSON.stringify(workspacePayload),
     }),
     {
-      params: { projectPath: ["demo-study", "export"] },
+      params: Promise.resolve({ projectPath: ["demo-study", "export"] }),
     },
   );
   const body = await response.json();
@@ -150,4 +150,42 @@ it("writes a deterministic LaTeX export and returns its project-local path", asy
       ),
     ),
   ).toBe(true);
+});
+
+it("loads a saved workspace in recovery mode when a selected source is missing", async () => {
+  const recoveryPayload = workspacePayloadSchema.parse({
+    ...workspacePayload,
+    recipeName: "missing-source",
+    sourceSelection: {
+      ...workspacePayload.sourceSelection,
+      selectedFilePaths: ["results/missing.csv"],
+    },
+  });
+
+  const saveResponse = await projectActionPost(
+    buildRequest("/api/projects/demo-study/workspace", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(recoveryPayload),
+    }),
+    {
+      params: Promise.resolve({ projectPath: ["demo-study", "workspace"] }),
+    },
+  );
+
+  expect(saveResponse.status).toBe(200);
+
+  const loadResponse = await projectActionGet(
+    buildRequest("/api/projects/demo-study/workspace?recipe=missing-source"),
+    {
+      params: Promise.resolve({ projectPath: ["demo-study", "workspace"] }),
+    },
+  );
+  const body = await loadResponse.json();
+
+  expect(loadResponse.status).toBe(200);
+  expect(body.mode).toBe("recovery");
+  expect(body.tableDocument.id).toBe("main-results");
 });

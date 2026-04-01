@@ -21,7 +21,7 @@ it("previews rows for a CSV beneath the shared root", async () => {
   const response = await projectActionGet(
     buildRequest("/api/projects/demo-study/preview?file=results/main.csv"),
     {
-      params: { projectPath: ["demo-study", "preview"] },
+      params: Promise.resolve({ projectPath: ["demo-study", "preview"] }),
     },
   );
   const body = await response.json();
@@ -45,7 +45,7 @@ it("bootstraps source selection and a starter table document from selected CSVs"
       }),
     }),
     {
-      params: { projectPath: ["demo-study", "bootstrap"] },
+      params: Promise.resolve({ projectPath: ["demo-study", "bootstrap"] }),
     },
   );
   const body = await response.json();
