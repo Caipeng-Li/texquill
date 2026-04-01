@@ -1,4 +1,5 @@
 .worktrees/
+.texquill/
 node_modules/
 .next/
 coverage/
