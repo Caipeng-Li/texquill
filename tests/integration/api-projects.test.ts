@@ -5,7 +5,7 @@ import path from "node:path";
 import { beforeEach, expect, it } from "vitest";
 
 import { GET as listProjects } from "../../src/app/api/projects/route";
-import { GET as listProjectFiles } from "../../src/app/api/projects/[...projectPath]/files/route";
+import { GET as projectActionGet } from "../../src/app/api/projects/[...projectPath]/route";
 
 function buildRequest(pathname: string) {
   return new Request(new URL(pathname, "http://localhost").toString());
@@ -26,8 +26,8 @@ it("lists projects beneath the shared root", async () => {
 });
 
 it("lists CSV files for a project beneath the shared root", async () => {
-  const response = await listProjectFiles(buildRequest("/api/projects/demo-study/files"), {
-    params: { projectPath: ["demo-study"] },
+  const response = await projectActionGet(buildRequest("/api/projects/demo-study/files"), {
+    params: { projectPath: ["demo-study", "files"] },
   });
   const body = await response.json();
 

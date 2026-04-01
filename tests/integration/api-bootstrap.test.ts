@@ -4,8 +4,10 @@ import path from "node:path";
 
 import { beforeEach, expect, it } from "vitest";
 
-import { POST as bootstrapTableDocument } from "../../src/app/api/projects/[...projectPath]/bootstrap/route";
-import { GET as previewCsvFile } from "../../src/app/api/projects/[...projectPath]/preview/route";
+import {
+  GET as projectActionGet,
+  POST as projectActionPost,
+} from "../../src/app/api/projects/[...projectPath]/route";
 
 function buildRequest(pathname: string, init?: RequestInit) {
   return new Request(new URL(pathname, "http://localhost").toString(), init);
@@ -16,10 +18,10 @@ beforeEach(() => {
 });
 
 it("previews rows for a CSV beneath the shared root", async () => {
-  const response = await previewCsvFile(
+  const response = await projectActionGet(
     buildRequest("/api/projects/demo-study/preview?file=results/main.csv"),
     {
-      params: { projectPath: ["demo-study"] },
+      params: { projectPath: ["demo-study", "preview"] },
     },
   );
   const body = await response.json();
@@ -31,7 +33,7 @@ it("previews rows for a CSV beneath the shared root", async () => {
 });
 
 it("bootstraps source selection and a starter table document from selected CSVs", async () => {
-  const response = await bootstrapTableDocument(
+  const response = await projectActionPost(
     buildRequest("/api/projects/demo-study/bootstrap", {
       method: "POST",
       headers: {
@@ -43,7 +45,7 @@ it("bootstraps source selection and a starter table document from selected CSVs"
       }),
     }),
     {
-      params: { projectPath: ["demo-study"] },
+      params: { projectPath: ["demo-study", "bootstrap"] },
     },
   );
   const body = await response.json();

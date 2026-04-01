@@ -1,7 +1,9 @@
 "use client";
 
+import { TableCanvas } from "@/components/canvas/TableCanvas";
 import { ProjectPicker } from "@/components/project/ProjectPicker";
 import { SourceSelector } from "@/components/source/SourceSelector";
+import { EditorProvider } from "@/features/editor/EditorProvider";
 import { useWorkspaceController } from "@/features/workspace/useWorkspaceController";
 
 export function AppShell() {
@@ -125,23 +127,29 @@ export function AppShell() {
           ) : null}
 
           {workspaceState.tableDocument ? (
-            <section
-              style={{
-                display: "grid",
-                gap: "10px",
-                padding: "20px 24px",
-                borderRadius: "22px",
-                background: "rgba(166, 75, 42, 0.08)",
-                border: "1px solid rgba(166, 75, 42, 0.18)",
-              }}
-            >
-              <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Starter table ready</h2>
-              <p style={{ margin: 0, color: "var(--muted)" }}>
-                {workspaceState.tableDocument.columns.length} columns and{" "}
-                {workspaceState.tableDocument.rows.length} rows loaded into the draft
-                document.
-              </p>
-            </section>
+            <div style={{ display: "grid", gap: "18px" }}>
+              <section
+                style={{
+                  display: "grid",
+                  gap: "10px",
+                  padding: "20px 24px",
+                  borderRadius: "22px",
+                  background: "rgba(166, 75, 42, 0.08)",
+                  border: "1px solid rgba(166, 75, 42, 0.18)",
+                }}
+              >
+                <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Starter table ready</h2>
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  {workspaceState.tableDocument.columns.length} columns and{" "}
+                  {workspaceState.tableDocument.rows.length} rows loaded into the draft
+                  document.
+                </p>
+              </section>
+
+              <EditorProvider initialTableDocument={workspaceState.tableDocument}>
+                <TableCanvas />
+              </EditorProvider>
+            </div>
           ) : null}
         </div>
       </section>

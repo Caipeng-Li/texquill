@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useReducer } from "react";
+import { useEffect, useReducer } from "react";
 
 import type { ProjectEntry, ProjectFileEntry, TableDocument } from "../../../shared/types";
 import { fetchJson } from "@/lib/fetch-json";
@@ -156,44 +156,6 @@ function encodeProjectPath(projectPath: string) {
 export function useWorkspaceController() {
   const [workspaceState, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
 
-  const loadProjectFiles = useEffectEvent(async (projectPath: string) => {
-    if (!projectPath) {
-      return;
-    }
-
-    try {
-      const response = await fetchJson<ProjectFilesResponse>(
-        `/api/projects/${encodeProjectPath(projectPath)}/files`,
-      );
-
-      dispatch({ type: "filesLoaded", entries: response.entries });
-    } catch (error) {
-      dispatch({
-        type: "failed",
-        message: error instanceof Error ? error.message : "Unable to load project files.",
-      });
-    }
-  });
-
-  const loadPreviewColumns = useEffectEvent(async (projectPath: string, csvPath: string) => {
-    if (!projectPath || !csvPath) {
-      return;
-    }
-
-    try {
-      const response = await fetchJson<PreviewResponse>(
-        `/api/projects/${encodeProjectPath(projectPath)}/preview?file=${encodeURIComponent(csvPath)}`,
-      );
-
-      dispatch({ type: "previewLoaded", columns: response.columns });
-    } catch (error) {
-      dispatch({
-        type: "failed",
-        message: error instanceof Error ? error.message : "Unable to preview CSV columns.",
-      });
-    }
-  });
-
   useEffect(() => {
     let isActive = true;
 
@@ -218,33 +180,78 @@ export function useWorkspaceController() {
   }, []);
 
   useEffect(() => {
-    if (workspaceState.selectedProject) {
-      void loadProjectFiles(workspaceState.selectedProject);
+    if (!workspaceState.selectedProject) {
+      return;
     }
-  }, [loadProjectFiles, workspaceState.selectedProject]);
+
+    let isActive = true;
+
+    fetchJson<ProjectFilesResponse>(
+      `/api/projects/${encodeProjectPath(workspaceState.selectedProject)}/files`,
+    )
+      .then((response) => {
+        if (isActive) {
+          dispatch({ type: "filesLoaded", entries: response.entries });
+        }
+      })
+      .catch((error) => {
+        if (isActive) {
+          dispatch({
+            type: "failed",
+            message: error instanceof Error ? error.message : "Unable to load project files.",
+          });
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [workspaceState.selectedProject]);
 
   useEffect(() => {
-    if (workspaceState.selectedProject && workspaceState.selectedCsvPaths[0]) {
-      void loadPreviewColumns(
-        workspaceState.selectedProject,
-        workspaceState.selectedCsvPaths[0],
-      );
+    if (!workspaceState.selectedProject || !workspaceState.selectedCsvPaths[0]) {
+      return;
     }
-  }, [loadPreviewColumns, workspaceState.selectedCsvPaths, workspaceState.selectedProject]);
 
-  const handleProjectChange = useEffectEvent((projectPath: string) => {
+    let isActive = true;
+
+    fetchJson<PreviewResponse>(
+      `/api/projects/${encodeProjectPath(workspaceState.selectedProject)}/preview?file=${encodeURIComponent(
+        workspaceState.selectedCsvPaths[0],
+      )}`,
+    )
+      .then((response) => {
+        if (isActive) {
+          dispatch({ type: "previewLoaded", columns: response.columns });
+        }
+      })
+      .catch((error) => {
+        if (isActive) {
+          dispatch({
+            type: "failed",
+            message: error instanceof Error ? error.message : "Unable to preview CSV columns.",
+          });
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [workspaceState.selectedCsvPaths, workspaceState.selectedProject]);
+
+  const handleProjectChange = (projectPath: string) => {
     dispatch({ type: "projectSelected", projectPath });
-  });
+  };
 
-  const handleFileToggle = useEffectEvent((csvPath: string) => {
+  const handleFileToggle = (csvPath: string) => {
     dispatch({ type: "filesToggled", csvPath });
-  });
+  };
 
-  const handleColumnToggle = useEffectEvent((columnKey: string) => {
+  const handleColumnToggle = (columnKey: string) => {
     dispatch({ type: "columnToggled", columnKey });
-  });
+  };
 
-  const handleBootstrap = useEffectEvent(async () => {
+  const handleBootstrap = async () => {
     if (!workspaceState.selectedProject) {
       return;
     }
@@ -276,7 +283,7 @@ export function useWorkspaceController() {
         message: error instanceof Error ? error.message : "Unable to start a table document.",
       });
     }
-  });
+  };
 
   return {
     workspaceState,
