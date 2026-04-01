@@ -46,13 +46,14 @@ TeXquill refuses paths outside this configured root.
 
 ## Demo Data
 
-Demo CSV files live under [examples/projects/demo-study/results](/ssd/lijinpeng/code/texquill/.worktrees/task-1-scaffold-baseline/examples/projects/demo-study/results).
+Demo CSV files live under `examples/projects/demo-study/results/`.
 
 The current demo project includes:
 
 - `main.csv`
 - `ablation.csv`
 - `metrics.csv`
+- `large-benchmark.csv`
 
 ## Architecture Notes
 
