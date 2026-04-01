@@ -11,17 +11,24 @@ function normalizeProjectPath(projectPath: string | string[]) {
     .filter(Boolean);
 }
 
-export function resolveProjectPath(projectPath: string | string[]) {
-  const root = getSharedRoot();
-  const segments = normalizeProjectPath(projectPath);
-  const absolutePath = path.resolve(root, ...segments);
-  const relativePath = path.relative(root, absolutePath);
+function resolveWithin(basePath: string, targetPath: string | string[]) {
+  const segments = normalizeProjectPath(targetPath);
+  const absolutePath = path.resolve(basePath, ...segments);
+  const relativePath = path.relative(basePath, absolutePath);
 
   if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
     throw new Error("Requested path is outside the configured root.");
   }
 
   return absolutePath;
+}
+
+export function resolveProjectPath(projectPath: string | string[]) {
+  return resolveWithin(getSharedRoot(), projectPath);
+}
+
+export function resolveProjectFilePath(projectPath: string | string[], filePath: string | string[]) {
+  return resolveWithin(resolveProjectPath(projectPath), filePath);
 }
 
 export function toProjectRelativePath(projectRoot: string, absolutePath: string) {

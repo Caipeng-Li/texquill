@@ -3,7 +3,7 @@ import { z } from "zod";
 const filterValueSchema = z.union([z.string(), z.number(), z.boolean()]);
 
 export const sourceColumnSelectionSchema = z.object({
-  sourcePath: z.string().min(1),
+  sourcePath: z.string().min(1).optional(),
   columnKey: z.string().min(1),
   label: z.string().min(1),
   hidden: z.boolean().optional(),
