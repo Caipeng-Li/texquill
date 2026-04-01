@@ -29,6 +29,8 @@ type WorkspaceState = {
   csvFiles: ProjectFileEntry[];
   selectedCsvPaths: string[];
   previewColumns: string[];
+  previewRows: Array<Record<string, string>>;
+  previewTotalRows: number;
   selectedColumns: string[];
   tableDocument: TableDocument | null;
   status: "idle" | "loading" | "ready" | "bootstrapping";
@@ -40,7 +42,7 @@ type WorkspaceAction =
   | { type: "projectSelected"; projectPath: string }
   | { type: "filesLoaded"; entries: ProjectFileEntry[] }
   | { type: "filesToggled"; csvPath: string }
-  | { type: "previewLoaded"; columns: string[] }
+  | { type: "previewLoaded"; columns: string[]; rows: Array<Record<string, string>>; totalRows: number }
   | { type: "columnToggled"; columnKey: string }
   | { type: "bootstrapStarted" }
   | { type: "bootstrapSucceeded"; tableDocument: TableDocument }
@@ -52,6 +54,8 @@ const initialWorkspaceState: WorkspaceState = {
   csvFiles: [],
   selectedCsvPaths: [],
   previewColumns: [],
+  previewRows: [],
+  previewTotalRows: 0,
   selectedColumns: [],
   tableDocument: null,
   status: "idle",
@@ -74,6 +78,8 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
         csvFiles: [],
         selectedCsvPaths: [],
         previewColumns: [],
+        previewRows: [],
+        previewTotalRows: 0,
         selectedColumns: [],
         tableDocument: null,
         status: action.projectPath ? "loading" : "ready",
@@ -95,6 +101,8 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
         ...state,
         selectedCsvPaths: nextSelectedCsvPaths,
         previewColumns: nextSelectedCsvPaths.length === 0 ? [] : state.previewColumns,
+        previewRows: nextSelectedCsvPaths.length === 0 ? [] : state.previewRows,
+        previewTotalRows: nextSelectedCsvPaths.length === 0 ? 0 : state.previewTotalRows,
         selectedColumns: nextSelectedCsvPaths.length === 0 ? [] : state.selectedColumns,
         tableDocument: null,
         error: null,
@@ -104,6 +112,8 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
       return {
         ...state,
         previewColumns: action.columns,
+        previewRows: action.rows,
+        previewTotalRows: action.totalRows,
         selectedColumns:
           state.selectedColumns.length > 0
             ? state.selectedColumns.filter((column) => action.columns.includes(column))
@@ -222,7 +232,12 @@ export function useWorkspaceController() {
     )
       .then((response) => {
         if (isActive) {
-          dispatch({ type: "previewLoaded", columns: response.columns });
+          dispatch({
+            type: "previewLoaded",
+            columns: response.columns,
+            rows: response.rows,
+            totalRows: response.totalRows,
+          });
         }
       })
       .catch((error) => {

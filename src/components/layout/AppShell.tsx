@@ -1,12 +1,17 @@
 "use client";
 
+import { useState } from "react";
+
 import { TableCanvas } from "@/components/canvas/TableCanvas";
+import { InspectorDrawer } from "@/components/inspector/InspectorDrawer";
 import { ProjectPicker } from "@/components/project/ProjectPicker";
+import { RawDataSheet } from "@/components/raw-data/RawDataSheet";
 import { SourceSelector } from "@/components/source/SourceSelector";
 import { EditorProvider } from "@/features/editor/EditorProvider";
 import { useWorkspaceController } from "@/features/workspace/useWorkspaceController";
 
 export function AppShell() {
+  const [isRawDataOpen, setIsRawDataOpen] = useState(false);
   const {
     workspaceState,
     handleProjectChange,
@@ -147,8 +152,26 @@ export function AppShell() {
               </section>
 
               <EditorProvider initialTableDocument={workspaceState.tableDocument}>
-                <TableCanvas />
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "18px",
+                    alignItems: "start",
+                    gridTemplateColumns: "minmax(0, 1fr)",
+                  }}
+                >
+                  <TableCanvas />
+                  <InspectorDrawer onOpenRawData={() => setIsRawDataOpen(true)} />
+                </div>
               </EditorProvider>
+
+              <RawDataSheet
+                columns={workspaceState.previewColumns}
+                rows={workspaceState.previewRows}
+                totalRows={workspaceState.previewTotalRows}
+                isOpen={isRawDataOpen}
+                onOpenChange={setIsRawDataOpen}
+              />
             </div>
           ) : null}
         </div>

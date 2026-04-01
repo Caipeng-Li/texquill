@@ -5,10 +5,64 @@ import { useEditor } from "@/features/editor/EditorProvider";
 import { TableBodyCell } from "./TableBodyCell";
 import { TableHeaderCell } from "./TableHeaderCell";
 
+function buildHeaderGroupRow(
+  visibleColumnKeys: string[],
+  allColumnKeys: string[],
+  headerGroups: Array<{ startColumnKey: string; span: number; label: string }>,
+) {
+  const renderedCells: Array<
+    | { key: string; kind: "empty" }
+    | { key: string; kind: "group"; label: string; span: number }
+  > = [];
+  let visibleIndex = 0;
+
+  while (visibleIndex < visibleColumnKeys.length) {
+    const currentColumnKey = visibleColumnKeys[visibleIndex];
+    const matchingGroup = headerGroups.find((group) => group.startColumnKey === currentColumnKey);
+
+    if (!matchingGroup) {
+      renderedCells.push({
+        key: `empty-${currentColumnKey}`,
+        kind: "empty",
+      });
+      visibleIndex += 1;
+      continue;
+    }
+
+    const startIndex = allColumnKeys.indexOf(matchingGroup.startColumnKey);
+    const coveredKeys = allColumnKeys.slice(startIndex, startIndex + matchingGroup.span);
+    const visibleCoveredKeys = coveredKeys.filter((columnKey) => visibleColumnKeys.includes(columnKey));
+
+    if (visibleCoveredKeys.length === matchingGroup.span) {
+      renderedCells.push({
+        key: matchingGroup.startColumnKey,
+        kind: "group",
+        label: matchingGroup.label,
+        span: matchingGroup.span,
+      });
+      visibleIndex += matchingGroup.span;
+      continue;
+    }
+
+    renderedCells.push({
+      key: `empty-${currentColumnKey}`,
+      kind: "empty",
+    });
+    visibleIndex += 1;
+  }
+
+  return renderedCells;
+}
+
 export function TableCanvas() {
   const { state, dispatch } = useEditor();
   const visibleColumns = state.tableDocument.columns.filter((column) => !column.hidden);
   const hiddenColumns = state.tableDocument.columns.filter((column) => column.hidden);
+  const headerGroupRow = buildHeaderGroupRow(
+    visibleColumns.map((column) => column.key),
+    state.tableDocument.columns.map((column) => column.key),
+    state.tableDocument.headerGroups,
+  );
 
   return (
     <section
@@ -62,6 +116,37 @@ export function TableCanvas() {
           }}
         >
           <thead>
+            {state.tableDocument.headerGroups.length > 0 ? (
+              <tr>
+                {headerGroupRow.map((cell) =>
+                  cell.kind === "group" ? (
+                    <th
+                      key={cell.key}
+                      colSpan={cell.span}
+                      style={{
+                        padding: "14px",
+                        textAlign: "center",
+                        color: "var(--muted)",
+                        borderBottom: "1px solid rgba(36, 31, 24, 0.08)",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        fontSize: "0.78rem",
+                      }}
+                    >
+                      {cell.label}
+                    </th>
+                  ) : (
+                    <th
+                      key={cell.key}
+                      style={{
+                        padding: "14px",
+                        borderBottom: "1px solid rgba(36, 31, 24, 0.08)",
+                      }}
+                    />
+                  ),
+                )}
+              </tr>
+            ) : null}
             <tr>
               {visibleColumns.map((column) => {
                 const currentIndex = state.tableDocument.columns.findIndex(
@@ -93,6 +178,9 @@ export function TableCanvas() {
                   <TableBodyCell
                     key={`${row.id}-${column.key}`}
                     align={column.align}
+                    emphasized={state.tableDocument.emphasisRules.some(
+                      (rule) => rule.columnKey === column.key && rule.style === "bold",
+                    )}
                     value={row.cells[column.key]}
                   />
                 ))}

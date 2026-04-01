@@ -1,4 +1,11 @@
-import { renameColumnLabel, reorderColumn, resizeColumn, toggleColumnHidden } from "../../../src/features/editor/editor-actions";
+import {
+  createHeaderGroup,
+  renameColumnLabel,
+  reorderColumn,
+  resizeColumn,
+  setTemplatePreset,
+  toggleColumnHidden,
+} from "../../../src/features/editor/editor-actions";
 import { createInitialEditorState, editorReducer } from "../../../src/features/editor/editor-reducer";
 import { tableDocumentSchema } from "../../../shared/schema/table-document";
 
@@ -60,4 +67,30 @@ it("reorders columns without losing row cell values", () => {
     "accuracy",
   ]);
   expect(nextState.tableDocument.rows[0]?.cells.f1).toBe("83.9");
+});
+
+it("creates a grouped header across adjacent visible columns", () => {
+  const initialState = createInitialEditorState(initialTableDocument);
+  const nextState = editorReducer(
+    initialState,
+    createHeaderGroup({
+      label: "Main Metrics",
+      columnKeys: ["accuracy", "f1"],
+    }),
+  );
+
+  expect(nextState.tableDocument.headerGroups).toHaveLength(1);
+  expect(nextState.tableDocument.headerGroups[0]).toMatchObject({
+    label: "Main Metrics",
+    startColumnKey: "accuracy",
+    span: 2,
+  });
+});
+
+it("updates the template preset and records matching override defaults", () => {
+  const initialState = createInitialEditorState(initialTableDocument);
+  const nextState = editorReducer(initialState, setTemplatePreset("neurips"));
+
+  expect(nextState.tableDocument.templatePreset).toBe("neurips");
+  expect(nextState.tableDocument.templateOverrides.ruleStyle).toBe("booktabs");
 });
